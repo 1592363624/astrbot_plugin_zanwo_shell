@@ -55,7 +55,7 @@ stranger_responses = [
     "astrbot_plugin_zanwo_shell",
     "Shell",
     "发送 赞我 自动点赞",
-    "1.0.0",
+    "1.0.1",
     "https://github.com/1592363624/astrbot_plugin_zanwo_shell",
 )
 class zanwo(Star):
@@ -73,6 +73,24 @@ class zanwo(Star):
         self.subscribed_users: list[str] = config.get("subscribed_users", [])
         # 点赞日期
         self.zanwo_date: str = config.get("zanwo_date", None)
+        # 订阅点赞审批管理员ID列表（插件配置）
+        raw_subscribe_admins = config.get("subscribe_admins", [])
+        if isinstance(raw_subscribe_admins, str):
+            parts = (
+                raw_subscribe_admins.replace("，", ",")
+                .split(",")
+            )
+            self.subscribe_admins: list[str] = [
+                p.strip() for p in parts if p.strip()
+            ]
+        elif isinstance(raw_subscribe_admins, list):
+            self.subscribe_admins: list[str] = [
+                str(p).strip() for p in raw_subscribe_admins if str(p).strip()
+            ]
+        else:
+            self.subscribe_admins: list[str] = []
+        # 待审批的订阅请求，key 为 "group_id:sender_id"
+        self.pending_subscriptions: dict[str, dict] = {}
 
     async def _like(self, client: CQHttp, ids: list[str]) -> str:
         """
@@ -153,13 +171,122 @@ class zanwo(Star):
     async def subscribe_like(self, event: AiocqhttpMessageEvent):
         """订阅点赞"""
         sender_id = event.get_sender_id()
-        event.session_id
+        group_id = event.get_group_id()
+        key = f"{group_id}:{sender_id}"
         if sender_id in self.subscribed_users:
             yield event.plain_result("你已经订阅点赞了哦~")
             return
-        self.subscribed_users.append(sender_id)
-        self.config.save_config()
-        yield event.plain_result("订阅成功！我将每天自动为你点赞")
+        if not self.subscribe_admins:
+            yield event.plain_result("当前未配置订阅审核管理员，请联系bot管理员配置后再试~")
+            return
+        if key in self.pending_subscriptions:
+            yield event.plain_result("你已经提交过订阅申请啦，请等待管理员审批~")
+            return
+        self.pending_subscriptions[key] = {
+            "group_id": group_id,
+            "user_id": sender_id,
+        }
+        client = event.bot
+        try:
+            user_info = await client.get_stranger_info(user_id=int(sender_id))
+            nickname = user_info.get("nickname", "未知用户")
+        except Exception:
+            nickname = "未知用户"
+        any_success = False
+        for admin_id in self.subscribe_admins:
+            try:
+                await client.send_private_msg(
+                    user_id=int(admin_id),
+                    message=(
+                        "[订阅点赞申请]\n"
+                        f"群号: {group_id}\n"
+                        f"申请人: {nickname}（QQ: {sender_id}）\n"
+                        "请在私聊中回复以下指令之一（可引用本消息）：\n"
+                        f"/同意订阅点赞 {group_id} {sender_id}\n"
+                        f"/拒绝订阅点赞 {group_id} {sender_id}"
+                    ),
+                )
+                any_success = True
+            except Exception:
+                continue
+        if any_success:
+            yield event.plain_result(
+                "已向插件管理员提交订阅申请，请等待管理员在私聊中审批结果。"
+            )
+        else:
+            yield event.plain_result(
+                "已记录你的订阅申请，但向插件管理员发送私聊失败。\n"
+                "请确认插件管理员已与bot互为好友并允许私聊，"
+                "管理员也可主动私聊bot发送 /同意订阅点赞 群号 用户QQ 进行审批。"
+            )
+
+    @filter.command("同意订阅点赞")
+    async def approve_subscribe_like(self, event: AiocqhttpMessageEvent):
+        """同意订阅点赞申请（插件管理员，私聊）"""
+        admin_id = event.get_sender_id()
+        if admin_id not in self.subscribe_admins:
+            yield event.plain_result("你不是本插件配置的管理员，无法审批订阅请求~")
+            return
+        parts = event.message_str.strip().split()
+        if len(parts) < 3:
+            yield event.plain_result("用法：/同意订阅点赞 群号 用户QQ")
+            return
+        group_id = parts[1]
+        user_id = parts[2]
+        replies = []
+        key = f"{group_id}:{user_id}"
+        if key not in self.pending_subscriptions:
+            if user_id in self.subscribed_users:
+                replies.append(f"{user_id} 已经是订阅用户啦，无需再次同意~")
+            else:
+                replies.append(f"未找到 {user_id} 在群 {group_id} 的订阅申请，无法同意哦~")
+        else:
+            if user_id not in self.subscribed_users:
+                self.subscribed_users.append(user_id)
+                self.config.save_config()
+            self.pending_subscriptions.pop(key, None)
+            replies.append(f"已同意群 {group_id} 中 {user_id} 的订阅点赞申请，将为其每天自动点赞~")
+            client = event.bot
+            try:
+                await client.send_group_msg(
+                    group_id=int(group_id),
+                    message=f"{user_id} 的订阅点赞申请已通过，将为TA每天自动点赞~",
+                )
+            except Exception:
+                pass
+        if replies:
+            yield event.plain_result("\n".join(replies))
+
+    @filter.command("拒绝订阅点赞")
+    async def reject_subscribe_like(self, event: AiocqhttpMessageEvent):
+        """拒绝订阅点赞申请（插件管理员，私聊）"""
+        admin_id = event.get_sender_id()
+        if admin_id not in self.subscribe_admins:
+            yield event.plain_result("你不是本插件配置的管理员，无法审批订阅请求~")
+            return
+        parts = event.message_str.strip().split()
+        if len(parts) < 3:
+            yield event.plain_result("用法：/拒绝订阅点赞 群号 用户QQ")
+            return
+        group_id = parts[1]
+        user_id = parts[2]
+        replies = []
+        key = f"{group_id}:{user_id}"
+        if key not in self.pending_subscriptions:
+            replies.append(f"未找到 {user_id} 在群 {group_id} 的订阅申请，无法拒绝哦~")
+        else:
+            self.pending_subscriptions.pop(key, None)
+            replies.append(f"已拒绝群 {group_id} 中 {user_id} 的订阅点赞申请。")
+            client = event.bot
+            try:
+                await client.send_group_msg(
+                    group_id=int(group_id),
+                    message=f"{user_id} 的订阅点赞申请已被管理员拒绝。",
+                )
+            except Exception:
+                pass
+        if replies:
+            yield event.plain_result("\n".join(replies))
 
     @filter.command("取消订阅点赞")
     async def unsubscribe_like(self, event: AiocqhttpMessageEvent):
