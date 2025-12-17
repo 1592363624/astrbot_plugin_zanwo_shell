@@ -52,11 +52,11 @@ stranger_responses = [
 
 
 @register(
-    "astrbot_plugin_zanwo",
-    "Futureppo",
+    "astrbot_plugin_zanwo_shell",
+    "Shell",
     "发送 赞我 自动点赞",
-    "1.0.8",
-    "https://github.com/Futureppo/astrbot_plugin_zanwo",
+    "1.0.0",
+    "https://github.com/1592363624/astrbot_plugin_zanwo_shell",
 )
 class zanwo(Star):
     def __init__(self, context: Context, config: AstrBotConfig):

@@ -1,16 +1,12 @@
-</div>
-
 <div align="center">
 
-![:name](https://count.getloli.com/@astrbot_plugin_zanwo?name=astrbot_plugin_zanwo&theme=minecraft&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto)
+![:shell](https://count.getloli.com/@github_monitor_shell?name=github_monitor_shell&theme=minecraft&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto)
 
-# astrbot_plugin_zanwo
 
-_✨ [astrbot](https://github.com/AstrBotDevs/AstrBot) 赞我插件 ✨_
-
-[![Python 3.8+](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/)
-[![GitHub](https://img.shields.io/badge/作者-Futureppo-blue)](https://github.com/Futureppo)
-[![GitHub](https://img.shields.io/badge/作者-Zhalslar-blue)](https://github.com/Zhalslar)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
+[![AstrBot](https://img.shields.io/badge/AstrBot-3.4%2B-orange.svg)](https://github.com/Soulter/AstrBot)
+[![GitHub](https://img.shields.io/badge/作者-Shell-blue)](https://github.com/1592363624)
 
 </div>
 
@@ -45,14 +41,12 @@ _✨ [astrbot](https://github.com/AstrBotDevs/AstrBot) 赞我插件 ✨_
 
 ## 🐔 联系作者
 
-- **反馈**：欢迎在 [GitHub Issues](https://github.com/Futureppo/astrbot_plugin_zanwo/issues) 提交问题或建议
+- **反馈**：欢迎在 [GitHub Issues](https://github.com/1592363624/astrbot_plugin_zanwo_shell/issues) 提交问题或建议
+QQ群:91219736
+telegram:[巅峰阁](https://t.me/ShellDFG)
 
 ---
 
 ## 🌟 支持
 
 - Star 这个项目！
-
-## 📜 开源协议
-
-本项目采用 [MIT License](LICENSE)
