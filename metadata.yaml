@@ -2,6 +2,6 @@ name: astrbot_plugin_zanwo_shell
 display_name: QQ自动点赞
 desc: QQ点赞插件，每天可点50个赞，还能定时自动点赞 
 help: 发送指令 赞我 点赞 
-version: v1.0.1 
+version: v1.0.2 
 author: Shell 
 repo: https://github.com/1592363624/astrbot_plugin_zanwo_shell 

@@ -55,7 +55,7 @@ stranger_responses = [
     "astrbot_plugin_zanwo_shell",
     "Shell",
     "发送 赞我 自动点赞",
-    "1.0.1",
+    "1.0.2",
     "https://github.com/1592363624/astrbot_plugin_zanwo_shell",
 )
 class zanwo(Star):
@@ -164,7 +164,7 @@ class zanwo(Star):
             "%Y-%m-%d"
         ):
             await self._like(client, self.subscribed_users)
-            self.today_data = datetime.now().date().strftime("%Y-%m-%d")
+            self.zanwo_date = datetime.now().date().strftime("%Y-%m-%d")
             self.config.save_config()
 
     @filter.command("订阅点赞")
